@@ -80,9 +80,14 @@ Deberías ver:
 Di cerca del micro:
 - “**Pon Spotify**” → publica `assistant/spotify/play = true`
 - “**Cuéntame un chiste**” → publica `assistant/tts/say = <chiste>`
+- “**Pon Rosalia**” → publica `assistant/spotify/play_song = Rosalia`
 
 Los verás en la terminal del `mosquitto_sub`.
 
 ## 7) Salir
 
 `Ctrl + C` para detener el asistente.
+
+
+python spotify_agent.py
+python main.py

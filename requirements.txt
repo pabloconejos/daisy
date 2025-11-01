@@ -2,3 +2,5 @@ vosk==0.3.44
 sounddevice==0.4.7
 paho-mqtt==2.1.0
 numpy
+spotipy==2.24.0
+requests>=2.31.0

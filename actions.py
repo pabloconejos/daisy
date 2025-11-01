@@ -15,22 +15,32 @@ class Actions:
     def __init__(self, bus: MqttBus):
         self.bus = bus
 
+    # ----- SPOTIFY -----
     async def play_spotify(self):
-        # Ejemplo: publicar un evento para que otro servicio (Home Assistant, Node-RED, etc.) lo consuma
+        # Reproducción por defecto (playlist/query que definas en el agent)
         await self.bus.publish("spotify/play", "true")
-        # También podrías lanzar un comando local en la Pi (p. ej. con spotifyd o librespot).
-        # Aquí nos mantenemos en MQTT para mantener el diseño desacoplado.
 
+    async def play_song_by_name(self, query: str):
+        # Reproducir una canción por nombre (el agent la busca y la pone)
+        await self.bus.publish("spotify/play_song", query or "")
+
+    async def next_track(self):
+        # Pasar a la siguiente canción
+        await self.bus.publish("spotify/next", "1")
+
+    # ----- OTROS -----
     async def tell_joke(self):
         joke = random.choice(_JOKES)
-        # Publica a un topic que tu TTS (eSpeak NG, Piper, etc.) esté escuchando
         await self.bus.publish("tts/say", joke)
-        # Y de paso, un log/eco simple
         await self.bus.publish("log/info", f"JOKE::{joke}")
 
     async def handle(self, intent: str, slots: dict):
         if intent == "play_spotify":
             await self.play_spotify()
+        elif intent == "play_song_by_name":
+            await self.play_song_by_name(slots.get("query", ""))
+        elif intent == "next_track":
+            await self.next_track()
         elif intent == "tell_joke":
             await self.tell_joke()
         else:

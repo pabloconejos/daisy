@@ -1,18 +1,33 @@
 import re
 from typing import Optional, Tuple
 
-# Patrón muy simple. Para producción considera Rasa, Snips, intent parsers con ML, o reglas más ricas.
-# Aquí mapeamos a intents + (opcional) slots.
 _PATTERNS = [
-    (re.compile(r"\b(pon|reproduce|abre)\b.*\b(spotify)\b", re.IGNORECASE), ("play_spotify", {})),
-    # antes solo "cuéntame/dime"
-    (re.compile(r"\b(cu[eé]nta(me)?|dime|cuenta)\b.*\b(chiste)\b", re.IGNORECASE), ("tell_joke", {})),
+    # "Pon Spotify" / "Pon música"
+    (re.compile(r"\b(pon|reproduce|enciende)\b.*\b(spotify|m[uú]sica)\b", re.IGNORECASE),
+     ("play_spotify", {})),
+
+    # "Pon <canción>" / "Reproduce <canción>"
+    # Captura lo que viene después del verbo como 'query'
+    (re.compile(r"\b(pon|reproduce)\b\s+(.+)", re.IGNORECASE),
+     ("play_song_by_name", {"slot": "query"})),
+
+    # "Siguiente" / "Pasa canción"
+    (re.compile(r"\b(siguiente|pasa\s+canci[oó]n|pr[oó]xima)\b", re.IGNORECASE),
+     ("next_track", {})),
+
+    # "Cuéntame un chiste"
+    (re.compile(r"\b(cu[eé]ntame|dime|cuenta)\b.*\b(chiste)\b", re.IGNORECASE),
+     ("tell_joke", {})),
 ]
-    
 
 def match_intent(text: str) -> Optional[Tuple[str, dict]]:
     t = text.strip()
-    for rx, (intent, _slot) in _PATTERNS:
-        if rx.search(t):
-            return intent, {}
+    for rx, (intent, data) in _PATTERNS:
+        m = rx.search(t)
+        if m:
+            slots = {}
+            if data.get("slot") == "query":
+                # Toma el grupo 2 (lo que viene tras 'pon|reproduce')
+                slots["query"] = m.group(2).strip()
+            return intent, slots
     return None
