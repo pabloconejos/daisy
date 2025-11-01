@@ -8,6 +8,9 @@ import paho.mqtt.client as mqtt
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # ---------- Config ----------
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
@@ -23,6 +26,7 @@ POLL_INTERVAL = 1.0  # seg
 CACHE_PATH = ".cache-spotify"
 
 TOPIC_CMD_PLAY_SONG = f"{BASE}/spotify/play_song"   # payload: texto con nombre de canción
+TOPIC_CMD_RESUME    = f"{BASE}/spotify/play"      # payload: cualquiera
 TOPIC_CMD_NEXT      = f"{BASE}/spotify/next"        # payload: cualquier cosa
 TOPIC_STATE_JSON    = f"{BASE}/spotify/track/json"  # JSON con info básica
 # también publicamos campos simples:
@@ -78,7 +82,9 @@ class SimpleSpotifyAgent:
         reason_code = args[1] if len(args) >= 2 else 0
         code = getattr(reason_code, "value", reason_code)
         print(f"[MQTT] Conectado (code={code})")
+        # Subscripciones
         client.subscribe(TOPIC_CMD_PLAY_SONG)
+        client.subscribe(TOPIC_CMD_RESUME)
         client.subscribe(TOPIC_CMD_NEXT)
 
     def _on_disconnect(self, client, userdata, *args):
@@ -100,6 +106,8 @@ class SimpleSpotifyAgent:
                 self.play_song_by_name(payload)
             elif msg.topic == TOPIC_CMD_NEXT:
                 self.sp.next_track(device_id=self.device_id)
+            elif msg.topic == TOPIC_CMD_RESUME:
+                self.resume_playback()  
         except Exception as e:
             print(f"[SPOTIFY] Error mensaje: {e}")
 
@@ -119,6 +127,56 @@ class SimpleSpotifyAgent:
         time.sleep(0.2)
         self.sp.start_playback(device_id=self.device_id, uris=[uri])
         print(f"[SPOTIFY] Reproduciendo: {items[0]['name']}")
+    
+    def resume_playback(self):
+        """
+        Reanuda lo último que se estaba reproduciendo.
+        - Si hay playback pausado: start_playback() sin URIs (resume).
+        - Si no hay playback activo: toma la última canción reproducida y la lanza.
+        """
+        try:
+            # Garantiza que el audio salga por el device elegido
+            self.sp.transfer_playback(device_id=self.device_id, force_play=False)
+            time.sleep(0.2)
+
+            pb = self.sp.current_playback()
+            if pb and not pb.get("is_playing", False):
+                # Hay algo pausado: reanuda en el contexto actual (playlist/album/cola)
+                self.sp.start_playback(device_id=self.device_id)
+                print("[SPOTIFY] Reanudando reproducción anterior")
+                return
+
+            if not pb:
+                # No hay playback: usa la última canción reproducida como fallback
+                recent = self.sp.current_user_recently_played(limit=1)
+                items = (recent or {}).get("items") or []
+                if items:
+                    last_track = (items[0].get("track") or {})
+                    uri = last_track.get("uri")
+                    if uri:
+                        self.sp.start_playback(device_id=self.device_id, uris=[uri])
+                        print(f"[SPOTIFY] Reproduciendo lo último escuchado: {last_track.get('name','')}")
+                        return
+
+            # Si ya está reproduciendo, no hacemos nada
+            print("[SPOTIFY] Ya se está reproduciendo música")
+        except Exception as e:
+            print(f"[SPOTIFY] Error al reanudar: {e}")
+
+    def next_track(self):
+        """
+        Salta a la siguiente pista en el dispositivo activo.
+        - Transfiere la sesión al device elegido (por si estás controlando otro).
+        - Lanza 'next' en ese device.
+        """
+        try:
+            # Asegura que el playback está en el device seleccionado
+            self.sp.transfer_playback(device_id=self.device_id, force_play=False)
+            time.sleep(0.15)
+            self.sp.next_track(device_id=self.device_id)
+            print("[SPOTIFY] Siguiente pista ▶▶")
+        except Exception as e:
+            print(f"[SPOTIFY] Error al pasar a la siguiente pista: {e}")
 
     # ---- Estado → MQTT ----
     def publish_state_loop(self):

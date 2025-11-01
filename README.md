@@ -61,6 +61,9 @@ sudo systemctl start mosquitto
 mosquitto_sub -h localhost -t "#" -v
 ```
 
+python spotify_agent.py
+python main.py
+
 ## 5) Ejecutar el asistente
 
 ```bash
@@ -89,5 +92,3 @@ Los verás en la terminal del `mosquitto_sub`.
 `Ctrl + C` para detener el asistente.
 
 
-python spotify_agent.py
-python main.py
