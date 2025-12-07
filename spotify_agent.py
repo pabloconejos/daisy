@@ -121,9 +121,9 @@ class SimpleSpotifyAgent:
             elif msg.topic == TOPIC_CMD_PREVIOUS:
                 self.sp.previous_track(device_id=self.device_id)
             elif msg.topic == TOPIC_CMD_VOLUME_UP:
-                self.sp.volume(device_id=self.device_id, volume_percent=self.sp.current_playback()["device"]["volume_percent"] + 10)
+                self.sp.volume(device_id=self.device_id, volume_percent=self.sp.current_playback()["device"]["volume_percent"] + 30)
             elif msg.topic == TOPIC_CMD_VOLUME_DOWN:
-                self.sp.volume(device_id=self.device_id, volume_percent=self.sp.current_playback()["device"]["volume_percent"] - 10)
+                self.sp.volume(device_id=self.device_id, volume_percent=self.sp.current_playback()["device"]["volume_percent"] - 30)
         except Exception as e:
             print(f"[SPOTIFY] Error mensaje: {e}")
 
