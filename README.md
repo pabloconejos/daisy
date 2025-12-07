@@ -1,94 +1,69 @@
-# 🗣️ README — Puesta en marcha (Raspberry Pi)
+# Spotify Agent -- Guía de Ejecución
 
-Guía corta para ejecutar el asistente de voz. Asume que **ya tienes el código** en `~/proyectos/daisy/` y que `mqtt_bus.py` usa **paho-mqtt 2.x** (sin `asyncio-mqtt`).
+Este proyecto requiere una autenticación inicial con Spotify para poder
+funcionar correctamente.\
+Sigue los pasos detallados a continuación.
 
----
+------------------------------------------------------------------------
 
-## 1) Preparar entorno
+## 🚀 Primer inicio: Autenticación con Spotify
 
-```bash
-cd ~/proyectos/daisy
-python3 -m venv .venv
-source .venv/bin/activate
-sudo apt update
-sudo apt install -y python3-dev python3-pip portaudio19-dev mosquitto mosquitto-clients
-```
+0.  Borrar archivo `.cache-spotify` si existe.
 
-## 2) Instalar Python deps
 
-Usa este `requirements.txt` mínimo:
+1.  Ejecuta el script principal:
 
-```
-vosk==0.3.44
-sounddevice==0.4.7
-paho-mqtt==2.1.0
-```
+    ``` bash
+    python spotify_agent.py
+    ```
 
-Instala:
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
+2.  La primera vez aparecerá un mensaje similar a:
 
-## 3) Modelo Vosk (español, pequeño)
+        Please navigate here:
+        https://accounts.spotify.com/authorize?client_id=...&response_type=code...
 
-```bash
-mkdir -p models && cd models
-wget https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip
-unzip vosk-model-small-es-0.42.zip
-cd ..
-```
+    👉 **Copia esa URL y ábrela en tu navegador.**
 
-En `config.py`:
-```python
-VOSK_MODEL_PATH = Path("models/vosk-model-small-es-0.42")
-MQTT_HOST = "localhost"
-MQTT_PORT = 1883
-DEBUG_LOG = True
-```
+3.  Inicia sesión en Spotify y acepta los permisos.\
+    Serás redirigido a una URL como:
 
-> Opcional: silenciar logs de Vosk al inicio del programa:
-> ```bash
-> export VOSK_LOG_LEVEL=-1
-> ```
+        http://127.0.0.1:8888/callback?code=AQB4h7...
 
-## 4) Iniciar broker y monitor
+4.  **Copia el valor del parámetro `code`** de esa URL.
 
-```bash
-sudo systemctl enable mosquitto
-sudo systemctl start mosquitto
-# En otra terminal:
-mosquitto_sub -h localhost -t "#" -v
-```
+5.  Vuelve a la terminal y ejecuta de nuevo:
 
-python spotify_agent.py
-python main.py
+    ``` bash
+    python spotify_agent.py
+    ```
 
-## 5) Ejecutar el asistente
+------------------------------------------------------------------------
 
-```bash
-source .venv/bin/activate
+## ▶️ Ejecución del programa principal
+
+En otra terminal, lanza:
+
+``` bash
 python main.py
 ```
 
-Deberías ver:
-```
-[MQTT] Conectado (code=0)
-[STT] Iniciando captura de audio…
-[CORE] Asistente de voz iniciado…
-```
+------------------------------------------------------------------------
 
-## 6) Probar
+## ✔️ ¡Listo!
 
-Di cerca del micro:
-- “**Pon Spotify**” → publica `assistant/spotify/play = true`
-- “**Cuéntame un chiste**” → publica `assistant/tts/say = <chiste>`
-- “**Pon Rosalia**” → publica `assistant/spotify/play_song = Rosalia`
+Una vez autenticado por primera vez, el agente podrá interactuar con
+Spotify automáticamente usando las credenciales generadas.
 
-Los verás en la terminal del `mosquitto_sub`.
+# FLUJO DE EJECUCIÓN
 
-## 7) Salir
-
-`Ctrl + C` para detener el asistente.
+1. El agente escucha por MQTT los eventos de los intents con la funcion `on_text_detected`.
+2. Si el intent es reconocido, se llama a la funcion `match_intent` que consulta los patterns y devuelve el intent y los slots.
+3. Se llama a la funcion `handle` que ejecuta la accion correspondiente.
+4. La accion publica un evento MQTT que es escuchado por el agente de Spotify o el que le corresponde.
 
 
+## COMO AÑADIR UN NUEVO INTENT
+
+1. Añade una nueva entrada en el array `_PATTERNS` en el archivo `intents.py`.
+2. En  el archivo actions.py define una nueva función que implemente el intent y publique el evento MQTT correspondiente.
+3. El agente de Spotify o el que le corresponde se encarga de ejecutar la accion porque se habra suscrito a los eventos MQTT que publica `actions.py`.

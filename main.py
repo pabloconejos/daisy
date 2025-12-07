@@ -35,7 +35,8 @@ class VoiceAssistant:
         """
         Callback desde STT. No es async, así que despachamos a asyncio.create_task.
         """
-        match = match_intent(text) # Intenta detectar un intent a partir del texto reconocido.
+        match = match_intent(text) # Intenta detectar un intent a partir del texto reconocido. AQUI ES DONDE CHECKEA SI EL COMANDO EXISTE
+        print(match)
         if not match:
             if DEBUG_LOG: print("[NLP] No se reconoció un intent.")
             return

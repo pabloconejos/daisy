@@ -21,7 +21,7 @@ SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8888/callback")
 SPOTIFY_DEVICE_NAME = os.getenv("SPOTIFY_DEVICE_NAME")  # opcional
 
-SCOPE = "user-read-playback-state,user-modify-playback-state,user-read-currently-playing"
+SCOPE = "user-read-playback-state,user-modify-playback-state,user-read-currently-playing,user-read-recently-played"
 POLL_INTERVAL = 1.0  # seg
 CACHE_PATH = ".cache-spotify"
 
@@ -29,6 +29,8 @@ TOPIC_CMD_PLAY_SONG = f"{BASE}/spotify/play_song"   # payload: texto con nombre 
 TOPIC_CMD_RESUME    = f"{BASE}/spotify/play"      # payload: cualquiera
 TOPIC_CMD_NEXT      = f"{BASE}/spotify/next"        # payload: cualquier cosa
 TOPIC_STATE_JSON    = f"{BASE}/spotify/track/json"  # JSON con info básica
+TOPIC_CMD_STOP      = f"{BASE}/spotify/stop"        # payload: cualquier cosa
+TOPIC_CMD_PREVIOUS  = f"{BASE}/spotify/previous"    # payload: cualquier cosa
 # también publicamos campos simples:
 TOPIC_TITLE         = f"{BASE}/spotify/track/title"
 TOPIC_ARTISTS       = f"{BASE}/spotify/track/artists"
@@ -86,6 +88,8 @@ class SimpleSpotifyAgent:
         client.subscribe(TOPIC_CMD_PLAY_SONG)
         client.subscribe(TOPIC_CMD_RESUME)
         client.subscribe(TOPIC_CMD_NEXT)
+        client.subscribe(TOPIC_CMD_STOP)
+        client.subscribe(TOPIC_CMD_PREVIOUS)
 
     def _on_disconnect(self, client, userdata, *args):
         code = getattr(args[-2], "value", args[-2]) if len(args) >= 2 else 0
@@ -108,6 +112,10 @@ class SimpleSpotifyAgent:
                 self.sp.next_track(device_id=self.device_id)
             elif msg.topic == TOPIC_CMD_RESUME:
                 self.resume_playback()  
+            elif msg.topic == TOPIC_CMD_STOP:
+                self.sp.pause_playback(device_id=self.device_id)
+            elif msg.topic == TOPIC_CMD_PREVIOUS:
+                self.sp.previous_track(device_id=self.device_id)
         except Exception as e:
             print(f"[SPOTIFY] Error mensaje: {e}")
 

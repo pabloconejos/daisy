@@ -15,9 +15,18 @@ _PATTERNS = [
     (re.compile(r"\b(siguiente|pasa\s+canci[oó]n|pr[oó]xima)\b", re.IGNORECASE),
      ("next_track", {})),
 
+    # "Parar canción" / "Detener música"
+    (re.compile(r"\b(parar|detener)\b.*\b(canci[oó]n|m[uú]sica)\b", re.IGNORECASE),
+     ("stop_music", {})),
+
     # "Cuéntame un chiste"
     (re.compile(r"\b(cu[eé]ntame|dime|cuenta)\b.*\b(chiste)\b", re.IGNORECASE),
      ("tell_joke", {})),
+
+    # "Anterior" / "Vuelve canción"
+    (re.compile(r"\b(anterior|vuelve\s+canci[oó]n|pr[eé]via)\b", re.IGNORECASE),
+     ("previous_track", {})),
+
 ]
 
 def match_intent(text: str) -> Optional[Tuple[str, dict]]:

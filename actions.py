@@ -28,6 +28,14 @@ class Actions:
         # Pasar a la siguiente canción
         await self.bus.publish("spotify/next", "1")
 
+    async def stop_music(self):
+        # Detener la música
+        await self.bus.publish("spotify/stop", "true")
+
+    async def previous_track(self):
+        # Volver a la canción anterior
+        await self.bus.publish("spotify/previous", "1")
+
     # ----- OTROS -----
     async def tell_joke(self):
         joke = random.choice(_JOKES)
@@ -43,5 +51,9 @@ class Actions:
             await self.next_track()
         elif intent == "tell_joke":
             await self.tell_joke()
+        elif intent == "stop_music":
+            await self.stop_music()
+        elif intent == "previous_track":
+            await self.previous_track()
         else:
             await self.bus.publish("log/warn", f"Intent no soportado: {intent}")
