@@ -1,59 +1,33 @@
-import asyncio
-import random
+# actions/spotify_actions.py
 from mqtt_bus import MqttBus
 
-_JOKES = [
-    "¿Qué le dice un techo a otro? Techo de menos.",
-    "¿Cuál es el café más peligroso del mundo? El ex-preso.",
-    "¿Por qué la computadora fue al médico? Porque tenía un virus."
-]
-
-class Actions:
-    """
-    Acciones asociadas a intents. Publican eventos MQTT u otras tareas locales.
-    """
+class SpotifyActions:
     def __init__(self, bus: MqttBus):
         self.bus = bus
 
-    # ----- SPOTIFY -----
     async def play_spotify(self):
-        # Reproducción por defecto (playlist/query que definas en el agent)
         await self.bus.publish("spotify/play", "true")
 
     async def play_song_by_name(self, query: str):
-        # Reproducir una canción por nombre (el agent la busca y la pone)
         await self.bus.publish("spotify/play_song", query or "")
 
     async def next_track(self):
-        # Pasar a la siguiente canción
         await self.bus.publish("spotify/next", "1")
 
-    async def stop_music(self):
-        # Detener la música
-        await self.bus.publish("spotify/stop", "true")
-
     async def previous_track(self):
-        # Volver a la canción anterior
         await self.bus.publish("spotify/previous", "1")
-    
+
     async def resume_music(self):
-        # Reanudar la música
         await self.bus.publish("spotify/resume", "true")
 
+    async def stop_music(self):
+        await self.bus.publish("spotify/stop", "true")
+
     async def volume_up(self):
-        # Subir el volumen
         await self.bus.publish("spotify/volume_up", "true")
 
     async def volume_down(self):
-        # Bajar el volumen
         await self.bus.publish("spotify/volume_down", "true")
-    
-
-    # ----- OTROS -----
-    async def tell_joke(self):
-        joke = random.choice(_JOKES)
-        await self.bus.publish("tts/say", joke)
-        await self.bus.publish("log/info", f"JOKE::{joke}")
 
     async def handle(self, intent: str, slots: dict):
         if intent == "play_spotify":
@@ -72,8 +46,3 @@ class Actions:
             await self.volume_up()
         elif intent == "volume_down":
             await self.volume_down()
-        
-        elif intent == "tell_joke":
-            await self.tell_joke()
-        else:
-            await self.bus.publish("log/warn", f"Intent no soportado: {intent}")
