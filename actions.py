@@ -35,6 +35,19 @@ class Actions:
     async def previous_track(self):
         # Volver a la canción anterior
         await self.bus.publish("spotify/previous", "1")
+    
+    async def resume_music(self):
+        # Reanudar la música
+        await self.bus.publish("spotify/resume", "true")
+
+    async def volume_up(self):
+        # Subir el volumen
+        await self.bus.publish("spotify/volume_up", "true")
+
+    async def volume_down(self):
+        # Bajar el volumen
+        await self.bus.publish("spotify/volume_down", "true")
+    
 
     # ----- OTROS -----
     async def tell_joke(self):
@@ -49,11 +62,18 @@ class Actions:
             await self.play_song_by_name(slots.get("query", ""))
         elif intent == "next_track":
             await self.next_track()
-        elif intent == "tell_joke":
-            await self.tell_joke()
-        elif intent == "stop_music":
-            await self.stop_music()
         elif intent == "previous_track":
             await self.previous_track()
+        elif intent == "resume_music":
+            await self.resume_music()
+        elif intent == "stop_music":
+            await self.stop_music()
+        elif intent == "volume_up":
+            await self.volume_up()
+        elif intent == "volume_down":
+            await self.volume_down()
+        
+        elif intent == "tell_joke":
+            await self.tell_joke()
         else:
             await self.bus.publish("log/warn", f"Intent no soportado: {intent}")
