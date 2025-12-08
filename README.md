@@ -47,6 +47,14 @@ En otra terminal, lanza:
 python main.py
 ```
 
+## ▶️ Ejecución del panel web
+
+En otra terminal, lanza:
+
+``` bash
+python api/device_panel.py
+```
+
 ------------------------------------------------------------------------
 
 ## ✔️ ¡Listo!
