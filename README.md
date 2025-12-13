@@ -55,6 +55,8 @@ En otra terminal, lanza:
 python api/device_panel.py
 ```
 
+El panel web se iniciará en `https://daisy-pi.local:8080`.
+
 ------------------------------------------------------------------------
 
 ## ✔️ ¡Listo!

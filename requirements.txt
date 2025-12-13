@@ -4,3 +4,13 @@ paho-mqtt==2.1.0
 numpy
 spotipy==2.24.0
 requests>=2.31.0
+
+# Display / GPIO (Raspberry Pi 5)
+Pillow>=9.4.0
+rpi-lgpio>=0.6
+
+# Config
+python-dotenv>=1.0.0
+
+# API / Web panel
+flask>=2.3.0

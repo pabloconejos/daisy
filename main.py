@@ -5,12 +5,15 @@ from stt import VoskSTT
 from intents import match_intent
 from actions import Actions
 from asyncio import run_coroutine_threadsafe 
+from display import DaisyDisplay
 
 class VoiceAssistant:
     def __init__(self):
         self.bus = MqttBus() # Crea y guarda el cliente MQTT en la instancia (self.bus) para poder usarlo en todo el objeto.
         self.actions = Actions(self.bus) # Crea el manejador de acciones y le inyecta el bus MQTT (dependencia) para que pueda publicar.
         self.loop = None
+        display = DaisyDisplay(rst=27, dc=25, bl=18)
+        display.show_clock()
 
     async def start(self):
         await self.bus.connect() # Conecta al broker MQTT.
